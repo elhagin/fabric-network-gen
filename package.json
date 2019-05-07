@@ -5,6 +5,7 @@
   "author": "omar-elhagin",
   "license": "MIT",
   "dependencies": {
-    "inquirer": "^6.3.1"
+    "inquirer": "^6.3.1",
+    "yaml": "^1.5.1"
   }
 }
