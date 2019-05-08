@@ -58,7 +58,7 @@ inquirer.prompt(questions).then(async answers => {
         };
 
         networkData.orgs.push(org);
-        console.log(networkData);
+        // console.log(networkData);
     }
     writeComposeFile();
 });
@@ -112,6 +112,21 @@ function writeComposeFile() {
         ],
         networks: ['basic']
     };
+
+    if (networkData.couchDB) {
+        dockerComposeObj.services['couchdb'] = {
+            container_name: 'couchdb',
+            image: 'hyperledger/fabric-couchdb',
+            environment: [
+                'COUCHDB_USER=',
+                'COUCHDB_PASSWORD='
+            ],
+            ports: [
+                '5984:5984'
+            ],
+            networks: ['basic']
+        }
+    }
 
     networkData.orgs.forEach(org => {
         const orgDomain = `${org.orgName}.${networkData.domainName}`;
@@ -190,5 +205,38 @@ function writeComposeFile() {
         caPort += 1000;
     });
 
+    const firstOrgDomain = `${networkData.orgs[0].orgName}.${networkData.domainName}`;
+    dockerComposeObj.services['cli'] = {
+        container_name: 'cli',
+        image: 'hyperledger/fabric-tools',
+        tty: true,
+        environment: [
+            'GOPATH=/opt/gopath',
+            'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock',
+            'FABRIC_LOGGING_SPEC=info',
+            'CORE_PEER_ID=cli',
+            `CORE_PEER_ADDRESS=peer0.${firstOrgDomain}:7051`,
+            `CORE_PEER_LOCALMSPID=${networkData.orgs[0].orgName.toUpperCase()}MSP`,
+            `CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${firstOrgDomain}/users/Admin@${firstOrgDomain}/msp`,
+            'CORE_CHAINCODE_KEEPALIVE=10'
+        ],
+        working_dir: '/opt/gopath/src/github.com/hyperledger/fabric/peer',
+        command: '/bin/bash',
+        volumes: [
+            '/var/run/:/host/var/run/',
+            './crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/',
+            './../chaincode/:/opt/gopath/src/github.com/chaincode'
+        ],
+        networks: ['basic'],
+        depends_on: [
+            `${networkData.orderer}.${networkData.domainName}`,
+            `peer0.${firstOrgDomain}`
+        ]
+    };
+    if (networkData.couchDB) {
+        dockerComposeObj.services['cli'].depends_on.push('couchdb');
+    }
+
     fs.writeFileSync('docker-compose.yaml', yaml.stringify(dockerComposeObj));
+    console.log("===================================================\nSuccessfully generated docker-compose file\n===================================================");
 };

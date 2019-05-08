@@ -1,13 +1,15 @@
 version: "2"
 volumes:
-  ? orderer.example.com
-  ? peer0.cbe.example.com
-  ? peer1.cbe.example.com
+  ? orderer.ibm.com
+  ? peer0.cbe.ibm.com
+  ? peer1.cbe.ibm.com
+  ? peer0.hsbc.ibm.com
+  ? peer1.hsbc.ibm.com
 networks:
   ? basic
 services:
-  orderer.example.com:
-    container_name: orderer.example.com
+  orderer.ibm.com:
+    container_name: orderer.ibm.com
     image: hyperledger/fabric-orderer:1.4
     environment:
       - FABRIC_LOGGING_SPEC=INFO
@@ -29,34 +31,44 @@ services:
     command: orderer
     volumes:
       - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - ../crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
-      - ../crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
-      - orderer.example.com:/var/hyperledger/production/orderer
+      - ../crypto-config/ordererOrganizations/ibm.com/orderers/orderer.ibm.com/msp:/var/hyperledger/orderer/msp
+      - ../crypto-config/ordererOrganizations/ibm.com/orderers/orderer.ibm.com/tls/:/var/hyperledger/orderer/tls
+      - orderer.ibm.com:/var/hyperledger/production/orderer
     ports:
       - 7050:7050
     networks:
       - basic
-  ca.cbe.example.com:
+  couchdb:
+    container_name: couchdb
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    ports:
+      - 5984:5984
+    networks:
+      - basic
+  ca.cbe.ibm.com:
     image: hyperledger/fabric-ca:1.4
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-cbe
       - FABRIC_CA_SERVER_TLS_ENABLED=true
-      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.cbe.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.cbe.ibm.com-cert.pem
       - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY
     ports:
       - 7054:7054
     command: sh -c 'fabric-ca-server start --ca.certfile
-      /etc/hyperledger/fabric-ca-server-config/ca.cbe.example.com-cert.pem
+      /etc/hyperledger/fabric-ca-server-config/ca.cbe.ibm.com-cert.pem
       --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -b
       admin:adminpw -d'
     volumes:
-      - ./crypto-config/peerOrganizations/cbe.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
-    container_name: ca.cbe.example.com
+      - ./crypto-config/peerOrganizations/cbe.ibm.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca.cbe.ibm.com
     networks:
       - basic
-  peer0.cbe.example.com:
-    container_name: peer0.cbe.example.com
+  peer0.cbe.ibm.com:
+    container_name: peer0.cbe.ibm.com
     image: hyperledger/fabric-peer:1.4
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -69,27 +81,27 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
-      - CORE_PEER_ID=peer0.cbe.example.com
-      - CORE_PEER_ADDRESS=peer0.cbe.example.com:7051
+      - CORE_PEER_ID=peer0.cbe.ibm.com
+      - CORE_PEER_ADDRESS=peer0.cbe.ibm.com:7051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.cbe.example.com:7052
+      - CORE_PEER_CHAINCODEADDRESS=peer0.cbe.ibm.com:7052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.cbe.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.cbe.ibm.com:7051
       - CORE_PEER_LOCALMSPID=CBEMSP
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.cbe.example.com:8051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.cbe.ibm.com:8051
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
     volumes:
       - /var/run/:/host/var/run/
-      - ../crypto-config/peerOrganizations/cbe.example.com/peers/peer0.cbe.example.com/msp:/etc/hyperledger/fabric/msp
-      - ../crypto-config/peerOrganizations/cbe.example.com/peers/peer0.cbe.example.com/tls:/etc/hyperledger/fabric/tls
-      - peer0.cbe.example.com:/var/hyperledger/production
+      - ../crypto-config/peerOrganizations/cbe.ibm.com/peers/peer0.cbe.ibm.com/msp:/etc/hyperledger/fabric/msp
+      - ../crypto-config/peerOrganizations/cbe.ibm.com/peers/peer0.cbe.ibm.com/tls:/etc/hyperledger/fabric/tls
+      - peer0.cbe.ibm.com:/var/hyperledger/production
     ports:
       - 7051:7051
     networks:
       - basic
-  peer1.cbe.example.com:
-    container_name: peer1.cbe.example.com
+  peer1.cbe.ibm.com:
+    container_name: peer1.cbe.ibm.com
     image: hyperledger/fabric-peer:1.4
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -102,41 +114,132 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
-      - CORE_PEER_ID=peer1.cbe.example.com
-      - CORE_PEER_ADDRESS=peer1.cbe.example.com:8051
+      - CORE_PEER_ID=peer1.cbe.ibm.com
+      - CORE_PEER_ADDRESS=peer1.cbe.ibm.com:8051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
-      - CORE_PEER_CHAINCODEADDRESS=peer1.cbe.example.com:8052
+      - CORE_PEER_CHAINCODEADDRESS=peer1.cbe.ibm.com:8052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.cbe.example.com:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.cbe.ibm.com:8051
       - CORE_PEER_LOCALMSPID=CBEMSP
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.cbe.example.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.cbe.ibm.com:7051
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
     volumes:
       - /var/run/:/host/var/run/
-      - ../crypto-config/peerOrganizations/cbe.example.com/peers/peer1.cbe.example.com/msp:/etc/hyperledger/fabric/msp
-      - ../crypto-config/peerOrganizations/cbe.example.com/peers/peer1.cbe.example.com/tls:/etc/hyperledger/fabric/tls
-      - peer1.cbe.example.com:/var/hyperledger/production
+      - ../crypto-config/peerOrganizations/cbe.ibm.com/peers/peer1.cbe.ibm.com/msp:/etc/hyperledger/fabric/msp
+      - ../crypto-config/peerOrganizations/cbe.ibm.com/peers/peer1.cbe.ibm.com/tls:/etc/hyperledger/fabric/tls
+      - peer1.cbe.ibm.com:/var/hyperledger/production
     ports:
       - 8051:8051
     networks:
       - basic
-  ca.ibm.example.com:
+  ca.hsbc.ibm.com:
     image: hyperledger/fabric-ca:1.4
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
-      - FABRIC_CA_SERVER_CA_NAME=ca-ibm
+      - FABRIC_CA_SERVER_CA_NAME=ca-hsbc
       - FABRIC_CA_SERVER_TLS_ENABLED=true
-      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.ibm.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.hsbc.ibm.com-cert.pem
       - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY
     ports:
       - 8054:7054
     command: sh -c 'fabric-ca-server start --ca.certfile
-      /etc/hyperledger/fabric-ca-server-config/ca.ibm.example.com-cert.pem
+      /etc/hyperledger/fabric-ca-server-config/ca.hsbc.ibm.com-cert.pem
       --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -b
       admin:adminpw -d'
     volumes:
-      - ./crypto-config/peerOrganizations/ibm.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
-    container_name: ca.ibm.example.com
+      - ./crypto-config/peerOrganizations/hsbc.ibm.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca.hsbc.ibm.com
     networks:
       - basic
+  peer0.hsbc.ibm.com:
+    container_name: peer0.hsbc.ibm.com
+    image: hyperledger/fabric-peer:1.4
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_basic
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.hsbc.ibm.com
+      - CORE_PEER_ADDRESS=peer0.hsbc.ibm.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.hsbc.ibm.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.hsbc.ibm.com:9051
+      - CORE_PEER_LOCALMSPID=HSBCMSP
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.hsbc.ibm.com:10051
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    volumes:
+      - /var/run/:/host/var/run/
+      - ../crypto-config/peerOrganizations/hsbc.ibm.com/peers/peer0.hsbc.ibm.com/msp:/etc/hyperledger/fabric/msp
+      - ../crypto-config/peerOrganizations/hsbc.ibm.com/peers/peer0.hsbc.ibm.com/tls:/etc/hyperledger/fabric/tls
+      - peer0.hsbc.ibm.com:/var/hyperledger/production
+    ports:
+      - 9051:9051
+    networks:
+      - basic
+  peer1.hsbc.ibm.com:
+    container_name: peer1.hsbc.ibm.com
+    image: hyperledger/fabric-peer:1.4
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_basic
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer1.hsbc.ibm.com
+      - CORE_PEER_ADDRESS=peer1.hsbc.ibm.com:10051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.hsbc.ibm.com:10052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.hsbc.ibm.com:10051
+      - CORE_PEER_LOCALMSPID=HSBCMSP
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.hsbc.ibm.com:9051
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    volumes:
+      - /var/run/:/host/var/run/
+      - ../crypto-config/peerOrganizations/hsbc.ibm.com/peers/peer1.hsbc.ibm.com/msp:/etc/hyperledger/fabric/msp
+      - ../crypto-config/peerOrganizations/hsbc.ibm.com/peers/peer1.hsbc.ibm.com/tls:/etc/hyperledger/fabric/tls
+      - peer1.hsbc.ibm.com:/var/hyperledger/production
+    ports:
+      - 10051:10051
+    networks:
+      - basic
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=info
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.cbe.ibm.com:7051
+      - CORE_PEER_LOCALMSPID=CBEMSP
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/cbe.ibm.com/users/Admin@cbe.ibm.com/msp
+      - CORE_CHAINCODE_KEEPALIVE=10
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ./../chaincode/:/opt/gopath/src/github.com/chaincode
+    networks:
+      - basic
+    depends_on:
+      - orderer.ibm.com
+      - peer0.cbe.ibm.com
+      - couchdb
