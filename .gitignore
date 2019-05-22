@@ -62,3 +62,7 @@ typings/
 
 # Generated yaml files
 *.yaml
+
+# Fabric Directories
+crypto-config
+channel-artifacts

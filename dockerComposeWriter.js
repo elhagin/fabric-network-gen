@@ -40,9 +40,9 @@ module.exports = function writeComposeFile(networkData, anchorPeers) {
         working_dir: '/opt/gopath/src/github.com/hyperledger/fabric',
         command: 'orderer',
         volumes: [
-            '../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block',
-            `../crypto-config/ordererOrganizations/${networkData.domainName}/orderers/${ordererContainer}/msp:/var/hyperledger/orderer/msp`,
-            `../crypto-config/ordererOrganizations/${networkData.domainName}/orderers/${ordererContainer}/tls/:/var/hyperledger/orderer/tls`,
+            './channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block',
+            `./crypto-config/ordererOrganizations/${networkData.domainName}/orderers/${ordererContainer}/msp:/var/hyperledger/orderer/msp`,
+            `./crypto-config/ordererOrganizations/${networkData.domainName}/orderers/${ordererContainer}/tls/:/var/hyperledger/orderer/tls`,
             `${ordererContainer}:/var/hyperledger/production/orderer`
         ],
         ports: [
@@ -121,8 +121,8 @@ module.exports = function writeComposeFile(networkData, anchorPeers) {
                 command: 'peer node start',
                 volumes: [
                     '/var/run/:/host/var/run/',
-                    `../crypto-config/peerOrganizations/${orgDomain}/peers/${peerContainer}/msp:/etc/hyperledger/fabric/msp`,
-                    `../crypto-config/peerOrganizations/${orgDomain}/peers/${peerContainer}/tls:/etc/hyperledger/fabric/tls`,
+                    `./crypto-config/peerOrganizations/${orgDomain}/peers/${peerContainer}/msp:/etc/hyperledger/fabric/msp`,
+                    `./crypto-config/peerOrganizations/${orgDomain}/peers/${peerContainer}/tls:/etc/hyperledger/fabric/tls`,
                     `${peerContainer}:/var/hyperledger/production`
                 ],
                 ports: [
@@ -165,7 +165,7 @@ module.exports = function writeComposeFile(networkData, anchorPeers) {
         volumes: [
             '/var/run/:/host/var/run/',
             './crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/',
-            './../chaincode/:/opt/gopath/src/github.com/chaincode'
+            './chaincode/:/opt/gopath/src/github.com/chaincode'
         ],
         networks: ['basic'],
         depends_on: [

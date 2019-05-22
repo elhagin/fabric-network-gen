@@ -1,6 +1,8 @@
 const inquirer = require('inquirer');
 const writeComposeFile = require('./dockerComposeWriter');
 const writeConfigTx = require('./configTxWriter');
+const writeCryptoConfig = require('./cryptoConfigWriter');
+
 let networkData = {};
 let anchorPeers = new Map();
 
@@ -63,4 +65,5 @@ inquirer.prompt(questions).then(async answers => {
     }
     writeComposeFile(networkData, anchorPeers);
     writeConfigTx(networkData, anchorPeers);
+    writeCryptoConfig(networkData);
 });

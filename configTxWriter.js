@@ -13,15 +13,15 @@ module.exports = function writeConfigTx(networkData, anchorPeers) {
                     Policies: {
                         Readers: {
                             Type: 'Signature',
-                            Rule: "OR('OrdererMSP.member')"
+                            Rule: `OR('${orderer}MSP.member')`
                         },
                         Writers: {
                             Type: 'Signature',
-                            Rule: "OR('OrdererMSP.member')"
+                            Rule: `OR('${orderer}MSP.member')`
                         },
                         Admins: {
                             Type: 'Signature',
-                            Rule: "OR('OrdererMSP.admin')"
+                            Rule: `OR('${orderer}MSP.admin')`
                         }
                     }
                 }
@@ -121,7 +121,7 @@ module.exports = function writeConfigTx(networkData, anchorPeers) {
         OrdererGenesis: {
             Orderer: {
                 XX: '*OrdererDefaults',
-                Organizations: ['*OrdererOrg'],
+                Organizations: [`*${orderer}Org`],
                 Capabilities: {
                     XX: '*OrdererCapabilities'
                 }
