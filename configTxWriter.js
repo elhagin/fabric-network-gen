@@ -9,16 +9,60 @@ module.exports = function writeConfigTx(networkData, anchorPeers) {
                 [`&${orderer}Org`]: {
                     Name: `${orderer}Org`,
                     ID: `${orderer}MSP`,
-                    MSPDir: `crypto-config/ordererOrganizations/${networkData.domainName}/msp`
+                    MSPDir: `crypto-config/ordererOrganizations/${networkData.domainName}/msp`,
+                    Policies: {
+                        Readers: {
+                            Type: 'Signature',
+                            Rule: "OR('OrdererMSP.member')"
+                        },
+                        Writers: {
+                            Type: 'Signature',
+                            Rule: "OR('OrdererMSP.member')"
+                        },
+                        Admins: {
+                            Type: 'Signature',
+                            Rule: "OR('OrdererMSP.admin')"
+                        }
+                    }
                 }
             }
 
         ]
     };
 
+    configTxObj['Capabilities'] = {
+        Channel: {
+            V1_3: true
+        },
+        Orderer: {
+            V1_1: true
+        },
+        Application: {
+            V1_3: true,
+            V1_2: false,
+            V1_1: false
+        }
+    }
 
     configTxObj['Application'] = {
-        Organizations: null
+        Organizations: null,
+        Policies: {
+            Readers: {
+                Type: 'ImplicitMeta',
+                Rule: "ANY Readers"
+            },
+            Writers: {
+                Type: 'ImplicitMeta',
+                Rule: "ANY Writers"
+            },
+            Admins: {
+                Type: 'ImplicitMeta',
+                Rule: "MAJORITY Admins"
+            }
+        },
+        Capabilities: {
+            XX: "*ApplicationCapabilities"
+        }
     };
 
     configTxObj['Orderer'] = {
@@ -28,18 +72,59 @@ module.exports = function writeConfigTx(networkData, anchorPeers) {
         BatchSize:
         {
             MaxMessageCount: 30,
-            AbsoluteMaxBytes: '297 MB',
-            PreferredMaxBytes: '1536 KB'
+            AbsoluteMaxBytes: '99 MB',
+            PreferredMaxBytes: '512 KB'
         },
         Kafka: { Brokers: ['127.0.0.1:9092'] },
-        Organizations: null
+        Organizations: null,
+        Policies: {
+            Readers: {
+                Type: 'ImplicitMeta',
+                Rule: "ANY Readers"
+            },
+            Writers: {
+                Type: 'ImplicitMeta',
+                Rule: "ANY Writers"
+            },
+            Admins: {
+                Type: 'ImplicitMeta',
+                Rule: "MAJORITY Admins"
+            },
+            BlockValidation: {
+                Type: 'ImplicitMeta',
+                Rule: "ANY Writers"
+            }
+        }
+    }
+
+    configTxObj['Channel'] = {
+        Policies: {
+            Readers: {
+                Type: 'ImplicitMeta',
+                Rule: "ANY Readers"
+            },
+            Writers: {
+                Type: 'ImplicitMeta',
+                Rule: "ANY Writers"
+            },
+            Admins: {
+                Type: 'ImplicitMeta',
+                Rule: "MAJORITY Admins"
+            }
+        },
+        Capabilities: {
+            XX: "*ChannelCapabilities"
+        }
     }
 
     configTxObj['Profiles'] = {
         OrdererGenesis: {
             Orderer: {
                 XX: '*OrdererDefaults',
-                Organizations: ['*OrdererOrg']
+                Organizations: ['*OrdererOrg'],
+                Capabilities: {
+                    XX: '*OrdererCapabilities'
+                }
             },
             Consortiums: {
                 MyConsortium: {
@@ -51,7 +136,10 @@ module.exports = function writeConfigTx(networkData, anchorPeers) {
             Consortium: 'MyConsortium',
             Application: {
                 XX: '*ApplicationDefaults',
-                Organizations: []
+                Organizations: [],
+                Capabilities: {
+                    XX: '*ApplicationCapabilities'
+                }
             }
         }
     };
@@ -64,6 +152,20 @@ module.exports = function writeConfigTx(networkData, anchorPeers) {
                 Name: `${orgName}MSP`,
                 ID: `${orgName}MSP`,
                 MSPDir: `crypto-config/peerOrganizations/${orgDomain}/msp`,
+                Policies: {
+                    Readers: {
+                        Type: 'Signature',
+                        Rule: `OR('${orgName}MSP.admin', '${orgName}MSP.peer', '${orgName}MSP.client')`
+                    },
+                    Writers: {
+                        Type: 'Signature',
+                        Rule: `OR('${orgName}MSP.admin', '${orgName}MSP.client')`
+                    },
+                    Admins: {
+                        Type: 'Signature',
+                        Rule: `OR('${orgName}MSP.admin')`
+                    }
+                },
                 AnchorPeers: [
                     {
                         Host: `peer0.${orgDomain}`,
@@ -79,8 +181,12 @@ module.exports = function writeConfigTx(networkData, anchorPeers) {
     let yamlConfigTx = yaml.stringify(configTxObj);
     yamlConfigTx = yamlConfigTx.replace(/"(.*)":?/g, '$1');
     yamlConfigTx = yamlConfigTx.replace(/XX/g, '<<');
-    yamlConfigTx = yamlConfigTx.replace('Application:', 'Application: &ApplicationDefaults');
-    yamlConfigTx = yamlConfigTx.replace('Orderer:', 'Orderer: &OrdererDefaults');
+    yamlConfigTx = yamlConfigTx.replace('Application:', 'Application: &ApplicationCapabilities');
+    yamlConfigTx = yamlConfigTx.replace('Application:\n', 'Application: &ApplicationDefaults\n');
+    yamlConfigTx = yamlConfigTx.replace('Orderer:', 'Orderer: &OrdererCapabilities');
+    yamlConfigTx = yamlConfigTx.replace('Orderer:\n', 'Orderer: &OrdererDefaults\n');
+    yamlConfigTx = yamlConfigTx.replace('Channel:', 'Channel: &ChannelCapabilities');
+    yamlConfigTx = yamlConfigTx.replace('Channel:\n', 'Channel: &ChannelDefaults\n');
     fs.writeFileSync('configtx.yaml', yamlConfigTx);
     console.log("===================================================\nSuccessfully generated configtx file\n===================================================");
 }
